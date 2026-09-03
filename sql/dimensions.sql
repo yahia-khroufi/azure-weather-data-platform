@@ -1,0 +1,1 @@
+-- Dimension tables are introduced during the analytics phase.

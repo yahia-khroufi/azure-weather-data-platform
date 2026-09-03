@@ -1,0 +1,1 @@
+-- Azure SQL objects are introduced after MVP 2.

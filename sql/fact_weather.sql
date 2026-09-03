@@ -1,0 +1,1 @@
+-- The weather fact table is introduced during the analytics phase.
