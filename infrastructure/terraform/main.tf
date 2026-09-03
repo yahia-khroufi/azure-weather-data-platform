@@ -1,7 +1,9 @@
 locals {
-  storage_account_name = "stweather${var.environment}${var.unique_suffix}"
-  key_vault_name       = "kv-weather-${var.environment}-${var.unique_suffix}"
-  data_factory_name    = "adf-weather-${var.environment}-${var.unique_suffix}"
+  storage_account_name      = "stweather${var.environment}${var.unique_suffix}"
+  key_vault_name            = "kv-weather-${var.environment}-${var.unique_suffix}"
+  data_factory_name         = "adf-weather-${var.environment}-${var.unique_suffix}"
+  databricks_workspace_name = "dbw-weather-${var.environment}-${var.unique_suffix}"
+  databricks_connector_name = "dbc-weather-${var.environment}-${var.unique_suffix}"
 }
 
 resource "azurerm_resource_group" "weather" {
@@ -62,7 +64,7 @@ resource "azurerm_key_vault" "weather" {
   resource_group_name        = azurerm_resource_group.weather.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = "standard"
-  rbac_authorization_enabled  = true
+  rbac_authorization_enabled = true
   purge_protection_enabled   = false
   soft_delete_retention_days = 7
 }
@@ -89,3 +91,27 @@ resource "azurerm_role_assignment" "adf_key_vault_secrets_user" {
   principal_id         = azurerm_data_factory.weather.identity[0].principal_id
 }
 
+resource "azurerm_databricks_workspace" "weather" {
+  name                = local.databricks_workspace_name
+  resource_group_name = azurerm_resource_group.weather.name
+  location            = azurerm_resource_group.weather.location
+  sku                 = "premium"
+}
+
+resource "azurerm_databricks_access_connector" "weather" {
+  name                = local.databricks_connector_name
+  resource_group_name = azurerm_resource_group.weather.name
+  location            = azurerm_resource_group.weather.location
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_role_assignment" "databricks_storage_contributor" {
+  scope                = azurerm_storage_account.weather.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id = (
+    azurerm_databricks_access_connector.weather.identity[0].principal_id
+  )
+}

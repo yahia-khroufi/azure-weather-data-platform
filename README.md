@@ -21,7 +21,8 @@ The repository currently provides:
 
 - a local OpenWeather client for development and API contract testing;
 - reusable configuration and initial data quality rules;
-- Terraform infrastructure for the Resource Group, ADLS Gen2, Key Vault, ADF, and RBAC;
+- Terraform infrastructure for the Resource Group, ADLS Gen2, Key Vault, ADF,
+  Azure Databricks, managed identities, and RBAC;
 - unit tests and a non-deploying CI workflow.
 
 In production, Azure Data Factory calls OpenWeather directly.
@@ -33,9 +34,9 @@ In production, Azure Data Factory calls OpenWeather directly.
 ```text
 src/                      Local Python client, utilities, and quality rules
 config/cities.json        Version-controlled, non-secret city configuration
-infrastructure/terraform  Azure infrastructure for MVP 1
-adf/                      ADF Git integration artifacts
-databricks/               Reserved for MVP 2 transformations
+infrastructure/terraform  Azure infrastructure for MVP 1 and MVP 2
+adf/                      ADF artifacts after Git integration
+databricks/               RAW, Bronze, Silver, and Gold transformations
 sql/                      Reserved for the analytics layer
 tests/                    Unit and integration tests
 docs/                     Architecture and operational documentation
@@ -65,8 +66,7 @@ The `.env` file is ignored by Git and must never be committed.
 Run the local checks with:
 
 ```powershell
-ruff check .
-pytest -q
+python -m pytest -q
 ```
 
 ## Provision the Azure Infrastructure
@@ -105,7 +105,8 @@ terraform plan -out main.tfplan
 terraform apply main.tfplan
 ```
 
-Terraform creates the Azure foundation required for MVP 1, including the `datalake` filesystem.
+Terraform creates the Azure foundation, including the `datalake` filesystem,
+ADF, the Databricks workspace, and the Databricks Access Connector.
 
 The following logical paths are used by the platform:
 
@@ -118,7 +119,8 @@ datalake/
 └── gold/
 ```
 
-Directories are created when files are written to them.
+The RAW, Bronze, Silver, and Gold directories are managed by Terraform. The
+partition directories below RAW are created by ADF when weather files are written.
 
 ## ADF Ingestion Pipeline — MVP 1
 
