@@ -95,7 +95,7 @@ resource "azurerm_databricks_workspace" "weather" {
   name                = local.databricks_workspace_name
   resource_group_name = azurerm_resource_group.weather.name
   location            = azurerm_resource_group.weather.location
-  sku                 = "premium"
+  sku                 = "Trial"
 }
 
 resource "azurerm_databricks_access_connector" "weather" {
