@@ -1,8 +1,8 @@
 [
-  "Fes",
-  "Casablanca",
-  "Rabat",
-  "Marrakech",
-  "Tangier",
-  "Agadir"
+  {"city": "Fes"},
+  {"city": "Casablanca"},
+  {"city": "Rabat"},
+  {"city": "Marrakech"},
+  {"city": "Tangier"},
+  {"city": "Agadir"}
 ]

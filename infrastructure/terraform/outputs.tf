@@ -27,3 +27,18 @@ output "data_factory_principal_id" {
   description = "Managed identity principal used by ADF for RBAC."
   value       = azurerm_data_factory.weather.identity[0].principal_id
 }
+
+output "databricks_workspace_name" {
+  description = "Azure Databricks workspace name."
+  value       = azurerm_databricks_workspace.weather.name
+}
+
+output "databricks_workspace_url" {
+  description = "Azure Databricks workspace URL."
+  value       = azurerm_databricks_workspace.weather.workspace_url
+}
+
+output "databricks_access_connector_id" {
+  description = "Access Connector used by Unity Catalog to reach ADLS."
+  value       = azurerm_databricks_access_connector.weather.id
+}
