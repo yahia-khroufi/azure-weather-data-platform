@@ -122,4 +122,3 @@ resource "azurerm_role_assignment" "adf_databricks_contributor" {
   principal_id         = azurerm_data_factory.weather.identity[0].principal_id
 }
 
-
