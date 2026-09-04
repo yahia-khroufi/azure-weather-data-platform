@@ -115,3 +115,11 @@ resource "azurerm_role_assignment" "databricks_storage_contributor" {
     azurerm_databricks_access_connector.weather.identity[0].principal_id
   )
 }
+
+resource "azurerm_role_assignment" "adf_databricks_contributor" {
+  scope                = azurerm_databricks_workspace.weather.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_data_factory.weather.identity[0].principal_id
+}
+
+

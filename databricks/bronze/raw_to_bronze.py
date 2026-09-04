@@ -14,9 +14,6 @@ raw_path = (
 bronze_path = (
     f"abfss://{container}@{storage_account}.dfs.core.windows.net/bronze/weather/"
 )
-catalog_path = (
-    f"abfss://{container}@{storage_account}.dfs.core.windows.net/managed/weather/"
-)
 
 # COMMAND ----------
 
@@ -46,12 +43,7 @@ if bronze_df.limit(1).count() == 0:
     .save(bronze_path)
 )
 
-spark.sql(
-    f"""
-    CREATE CATALOG IF NOT EXISTS weather
-    MANAGED LOCATION '{catalog_path}'
-    """
-)
+spark.sql("CREATE CATALOG IF NOT EXISTS weather")
 spark.sql("CREATE SCHEMA IF NOT EXISTS weather.bronze")
 spark.sql(
     f"""
