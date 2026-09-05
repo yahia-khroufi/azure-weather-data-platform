@@ -60,6 +60,13 @@ resource "azurerm_storage_data_lake_gen2_path" "gold" {
   resource           = "directory"
 }
 
+resource "azurerm_storage_data_lake_gen2_path" "serving" {
+  path               = "serving"
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.datalake.name
+  storage_account_id = azurerm_storage_account.weather.id
+  resource           = "directory"
+}
+
 resource "azurerm_key_vault" "weather" {
   name                       = local.key_vault_name
   location                   = azurerm_resource_group.weather.location
