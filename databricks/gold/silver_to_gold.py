@@ -1,6 +1,3 @@
-# Databricks notebook source
-"""Aggregate Silver weather data into a daily Gold Delta table."""
-
 # COMMAND ----------
 
 from pyspark.sql import functions as F
@@ -26,14 +23,7 @@ silver_df = spark.read.format("delta").load(silver_path)
 gold_df = (
     silver_df
     .withColumn("weather_date", F.to_date("observed_at"))
-    .groupBy(
-        "city_id",
-        "city",
-        "country",
-        "latitude",
-        "longitude",
-        "weather_date",
-    )
+    .groupBy("city", "country", "weather_date")
     .agg(
         F.round(F.avg("temperature"), 2).alias("average_temperature"),
         F.min("temperature").alias("minimum_temperature"),

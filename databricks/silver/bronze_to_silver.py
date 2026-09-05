@@ -28,7 +28,6 @@ bronze_df = spark.read.format("delta").load(bronze_path)
 silver_df = (
     bronze_df
     .select(
-        F.col("id").cast("long").alias("city_id"),
         F.col("name").alias("city"),
         F.col("sys.country").alias("country"),
         F.col("coord.lat").cast("double").alias("latitude"),
@@ -51,11 +50,10 @@ silver_df = (
         F.col("ingested_at"),
         F.col("source_file"),
     )
-    .filter(F.col("city_id").isNotNull())
     .filter(F.col("city").isNotNull())
     .filter(F.col("temperature").isNotNull())
     .filter(F.col("humidity").between(0, 100))
-    .dropDuplicates(["city_id", "observed_at"])
+    .dropDuplicates(["city", "observed_at"])
 )
 
 if silver_df.limit(1).count() == 0:

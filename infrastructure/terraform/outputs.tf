@@ -42,18 +42,3 @@ output "databricks_access_connector_id" {
   description = "Access Connector used by Unity Catalog to reach ADLS."
   value       = azurerm_databricks_access_connector.weather.id
 }
-
-output "sql_server_name" {
-  description = "Logical Azure SQL server used by the analytics layer."
-  value       = azurerm_mssql_server.weather.name
-}
-
-output "sql_server_fqdn" {
-  description = "Fully qualified domain name of the Azure SQL server."
-  value       = azurerm_mssql_server.weather.fully_qualified_domain_name
-}
-
-output "sql_database_name" {
-  description = "Azure SQL database used by the analytics layer."
-  value       = azurerm_mssql_database.weather.name
-}
