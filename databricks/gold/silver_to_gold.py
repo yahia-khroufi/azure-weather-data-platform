@@ -1,3 +1,6 @@
+# Databricks notebook source
+"""Aggregate Silver weather data into a daily Gold Delta table."""
+
 # COMMAND ----------
 
 from pyspark.sql import functions as F

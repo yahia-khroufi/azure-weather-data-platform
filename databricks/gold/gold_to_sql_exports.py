@@ -1,4 +1,9 @@
 
+# Databricks notebook source
+"""Create the Gold star schema and export it for Azure SQL loading."""
+
+# COMMAND ----------
+
 from pyspark.sql import functions as F
 
 
@@ -13,6 +18,9 @@ gold_path = (
 )
 serving_path = (
     f"abfss://{container}@{storage_account}.dfs.core.windows.net/serving/sql/"
+)
+gold_model_path = (
+    f"abfss://{container}@{storage_account}.dfs.core.windows.net/gold/"
 )
 
 gold_df = spark.read.format("delta").load(gold_path)
@@ -59,12 +67,35 @@ fact_weather_df = gold_df.select(
 
 # COMMAND ----------
 
-exports = {
+tables = {
     "dim_city": dim_city_df,
     "dim_date": dim_date_df,
     "fact_weather": fact_weather_df,
 }
 
-for export_name, export_df in exports.items():
-    export_df.write.mode("overwrite").parquet(f"{serving_path}{export_name}/")
-    print(f"{export_name}: {export_df.count()} rows exported.")
+spark.sql("CREATE SCHEMA IF NOT EXISTS weather.gold")
+
+for table_name, table_df in tables.items():
+    delta_path = f"{gold_model_path}{table_name}/"
+
+    (
+        table_df.write
+        .format("delta")
+        .mode("overwrite")
+        .option("overwriteSchema", "true")
+        .save(delta_path)
+    )
+
+    spark.sql(
+        f"""
+        CREATE TABLE IF NOT EXISTS weather.gold.{table_name}
+        USING DELTA
+        LOCATION '{delta_path}'
+        """
+    )
+
+    table_df.write.mode("overwrite").parquet(
+        f"{serving_path}{table_name}/"
+    )
+
+    print(f"{table_name}: {table_df.count()} rows created and exported.")
