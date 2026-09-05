@@ -4,18 +4,16 @@ Cloud data engineering project that ingests current weather observations from
 OpenWeather and transforms them into Delta Lake tables on Azure Data Lake
 Storage Gen2.
 
-## Current Architecture
-
-```text
-OpenWeather API
-      |
-Azure Data Factory
-      |-- reads the API secret from Azure Key Vault
-      |-- writes JSON files to ADLS RAW
-      `-- starts the Azure Databricks Job
-                    |
-                    `-- RAW -> Bronze -> Silver -> Gold
 ```
+
+## Project Demo
+
+Watch the end-to-end Azure Weather Data Platform in action, including data
+ingestion with Azure Data Factory and transformation with Azure Databricks.
+
+[![Watch the Azure Weather Data Platform demo](https://img.youtube.com/vi/TL8enYKfsOQ/maxresdefault.jpg)](https://youtu.be/TL8enYKfsOQ)
+
+**[Watch the full project demo on YouTube →](https://youtu.be/TL8enYKfsOQ)**
 
 ## Databricks Transformations — MVP 2
 
@@ -37,19 +35,6 @@ the `weather_adls_credential` storage credential, and the `weather_datalake`
 external location. No storage key is stored in the notebooks.
 
 The transformations create these external Delta tables:
-
-```text
-weather.bronze.weather
-weather.silver.weather
-weather.gold.daily_city_weather
-```
-
-- Bronze preserves the OpenWeather payload and adds ingestion metadata.
-- Silver flattens, types, validates, and deduplicates weather observations.
-- Gold calculates daily weather indicators for each city.
-
-The hourly ADF trigger is the only production schedule. Databricks does not
-need a separate trigger because ADF starts the Job after ingestion succeeds.
 
 ## Security
 
