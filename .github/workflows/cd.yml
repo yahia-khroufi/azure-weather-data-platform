@@ -1,0 +1,86 @@
+name: CD DEV
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  terraform:
+    needs: checks
+    # Fork PRs run CI only. Never use pull_request_target to execute PR code.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name != 'pull_request' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ github.event_name == 'pull_request' && 'dev-plan' || 'dev' }}
+    concurrency:
+      group: terraform-weather-dev
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: infrastructure/terraform
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      ARM_USE_OIDC: "true"
+      ARM_RESOURCE_PROVIDER_REGISTRATIONS: none
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_environment: dev
+      TF_VAR_unique_suffix: ${{ vars.TF_UNIQUE_SUFFIX }}
+      TF_VAR_resource_group_name: ${{ vars.TF_RESOURCE_GROUP_NAME }}
+      TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+      TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+      TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+      TF_STATE_KEY: weather/dev.tfstate
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check deployment configuration
+        run: |
+          for name in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID \
+            TF_VAR_unique_suffix TF_VAR_resource_group_name TF_VAR_location \
+            TF_STATE_STORAGE_ACCOUNT TF_STATE_CONTAINER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing GitHub environment variable: $name. See docs/deployment.md."
+              exit 1
+            fi
+          done
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.11.4
+          terraform_wrapper: false
+      - name: Initialize remote state
+        run: |
+          terraform init -input=false -lockfile=readonly \
+            -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT" \
+            -backend-config="container_name=$TF_STATE_CONTAINER" \
+            -backend-config="key=$TF_STATE_KEY"
+      - run: terraform validate
+      - name: Preview DEV changes
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+      - name: Deploy saved plan to DEV
+        if: github.event_name != 'pull_request'
+        run: terraform apply -input=false -lock-timeout=5m tfplan
+      - name: Verify infrastructure converged
+        if: github.event_name != 'pull_request'
+        run: terraform plan -input=false -lock-timeout=5m -detailed-exitcode
+      - name: Remove local plan
+        if: always()
+        run: rm -f tfplan
