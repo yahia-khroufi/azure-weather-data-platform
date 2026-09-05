@@ -23,7 +23,14 @@ silver_df = spark.read.format("delta").load(silver_path)
 gold_df = (
     silver_df
     .withColumn("weather_date", F.to_date("observed_at"))
-    .groupBy("city", "country", "weather_date")
+    .groupBy(
+        "city_id",
+        "city",
+        "country",
+        "latitude",
+        "longitude",
+        "weather_date",
+    )
     .agg(
         F.round(F.avg("temperature"), 2).alias("average_temperature"),
         F.min("temperature").alias("minimum_temperature"),
